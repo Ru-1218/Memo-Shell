@@ -1,5 +1,4 @@
 import sqlite3
-import datetime
 import pandas as pd
 
 
@@ -7,15 +6,24 @@ class MEMO:
     def __init__(self):
         self.conn = sqlite3.connect("memo.db")
         self.c = self.conn.cursor()
+        sql = 'SELECT count(*) FROM sqlite_master WHERE type="table" AND name="memo_table"'
+        self.c.execute(sql)
+        sql = self.c.fetchone()[0]
+        if sql == 0:
+            self.c.execute("""
+            CREATE TABLE memo_table (id INTEGER PRIMARY KEY, 
+            date TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),
+            memo TEXT)
+            """)
+
 
     def write(self, text: str = ""):
         """
         一言メモを記入する
         """
-        d = datetime.datetime.now()
         self.c.execute("""
-        INSERT INTO memo_table (date, memo) values (?, ?)        
-        """, (d, text))
+        INSERT INTO memo_table (memo) values (?)        
+        """, (text,))
         self.conn.commit()
         return "記入しました。"
 
